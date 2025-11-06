@@ -1,0 +1,89 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - 会員登録</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-content">
+    <main class="main-content">
+        <div class="register-section">
+            <h2>新規会員登録</h2>
+            <form class="register-form">
+                <div class="form-row">
+                    <div class="input-group">
+                        <label for="lastName">姓:</label>
+                        <input type="text" id="lastName" name="lastName" required>
+                    </div>
+                    <div class="input-group">
+                        <label for="firstName">名:</label>
+                        <input type="text" id="firstName" name="firstName" required>
+                    </div>
+                </div>
+                
+                <div class="input-group">
+                    <label for="email">メールアドレス:</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="username">ユーザー名:</label>
+                    <input type="text" id="username" name="username" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="password">パスワード:</label>
+                    <input type="password" id="password" name="password" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="confirmPassword">パスワード確認:</label>
+                    <input type="password" id="confirmPassword" name="confirmPassword" required>
+                </div>
+                
+                <div class="input-group">
+                    <label for="studentId">学生番号（任意）:</label>
+                    <input type="text" id="studentId" name="studentId">
+                </div>
+                
+                <button type="submit" class="register-button">登録</button>
+            </form>
+            
+            <div class="register-links">
+                <p>既にアカウントをお持ちの方は<a href="../login/index.html">こちらからログイン</a></p>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../header.js"></script>
+    <script>
+        // 会員登録フォーム送信処理
+        document.querySelector('.register-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            
+            const password = document.getElementById('password').value;
+            const confirmPassword = document.getElementById('confirmPassword').value;
+            
+            if (password !== confirmPassword) {
+                alert('パスワードが一致しません。');
+                return;
+            }
+            
+            if (password.length < 6) {
+                alert('パスワードは6文字以上にしてください。');
+                return;
+            }
+            
+            const formData = new FormData(this);
+            const userData = Object.fromEntries(formData.entries());
+            
+            // 実際にはサーバーにデータを送信
+            console.log('登録データ:', userData);
+            
+            alert('会員登録が完了しました！ログインページに移動します。');
+            location.href = '../login/index.html';
+        });
+    </script>
+</body>
+</html>

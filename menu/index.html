@@ -1,0 +1,93 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - メニュー</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-content">
+    <main class="main-content">
+        <div class="menu-section">
+            <h2>購買メニュー</h2>
+            <div class="menu-categories">
+                <div class="category-filter">
+                    <button class="filter-btn active" data-category="all">すべて</button>
+                    <button class="filter-btn" data-category="food">食品</button>
+                    <button class="filter-btn" data-category="drink">飲み物</button>
+                    <button class="filter-btn" data-category="snack">お菓子</button>
+                    <button class="filter-btn" data-category="stationery">文房具</button>
+                </div>
+                
+                <div class="menu-grid" id="menuGrid">
+                    <!-- メニューアイテムが動的に挿入される -->
+                </div>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../header.js"></script>
+    <script>
+        // サンプルメニューデータ
+        const menuItems = [
+            { id: 1, name: 'おにぎり（鮭）', price: 120, category: 'food', image: '🍙' },
+            { id: 2, name: 'おにぎり（梅）', price: 110, category: 'food', image: '🍙' },
+            { id: 3, name: 'サンドイッチ', price: 200, category: 'food', image: '🥪' },
+            { id: 4, name: 'お茶', price: 100, category: 'drink', image: '🍵' },
+            { id: 5, name: 'コーヒー', price: 120, category: 'drink', image: '☕' },
+            { id: 6, name: 'ジュース', price: 150, category: 'drink', image: '🧃' },
+            { id: 7, name: 'チョコレート', price: 80, category: 'snack', image: '🍫' },
+            { id: 8, name: 'ポテトチップス', price: 130, category: 'snack', image: '🥔' },
+            { id: 9, name: 'ペン（黒）', price: 100, category: 'stationery', image: '✒️' },
+            { id: 10, name: 'ノート', price: 200, category: 'stationery', image: '📓' }
+        ];
+        
+        // カート機能
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        function addToCart(itemId) {
+            const item = menuItems.find(item => item.id === itemId);
+            const existingItem = cart.find(cartItem => cartItem.id === itemId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...item, quantity: 1 });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${item.name} をカートに追加しました！`);
+        }
+        
+        function renderMenuItems(items) {
+            const menuGrid = document.getElementById('menuGrid');
+            menuGrid.innerHTML = items.map(item => `
+                <div class="menu-item" data-category="${item.category}">
+                    <div class="item-image">${item.image}</div>
+                    <h3 class="item-name">${item.name}</h3>
+                    <p class="item-price">¥${item.price}</p>
+                    <div class="item-actions">
+                        <button class="add-to-cart-btn" onclick="addToCart(${item.id})">カートに追加</button>
+                        <button class="view-detail-btn" onclick="location.href='../detail/index.html?id=${item.id}'">詳細</button>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        // カテゴリフィルター
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const category = this.dataset.category;
+                const filteredItems = category === 'all' ? menuItems : menuItems.filter(item => item.category === category);
+                renderMenuItems(filteredItems);
+            });
+        });
+        
+        // 初期表示
+        renderMenuItems(menuItems);
+    </script>
+</body>
+</html>

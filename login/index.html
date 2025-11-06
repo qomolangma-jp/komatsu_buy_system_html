@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - ログイン</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="login-page">
+    <div class="login-container">
+        <form class="login-form">
+            <h2>ログイン</h2>
+            <div class="input-group">
+                <label for="username">ユーザー名:</label>
+                <input type="text" id="username" name="username" required>
+            </div>
+            <div class="input-group">
+                <label for="password">パスワード:</label>
+                <input type="password" id="password" name="password" required>
+            </div>
+            <button type="submit" class="login-button">ログイン</button>
+            <div class="links">
+                <a href="../register/index.html">会員登録はこちら</a>
+                <a href="../index.html">ホームに戻る</a>
+                <a href="#" onclick="alert('パスワードリセット機能は開発中です')">パスワードを忘れた場合</a>
+            </div>
+        </form>
+    </div>
+
+    <!-- ログインページはヘッダーなしのため、ナビゲーション用のスクリプトのみ読み込み -->
+    <script>
+        // キーボードナビゲーション（ログインページ用簡易版）
+        document.addEventListener('keydown', function(e) {
+            if (e.key === 'ArrowLeft') {
+                e.preventDefault();
+                location.href = '../index.html';
+            } else if (e.key === 'ArrowRight') {
+                e.preventDefault();
+                location.href = '../register/index.html';
+            }
+        });
+
+        // ログインフォーム送信処理
+        document.querySelector('.login-form').addEventListener('submit', function(e) {
+            e.preventDefault();
+            const username = document.getElementById('username').value;
+            const password = document.getElementById('password').value;
+            
+            if (username && password) {
+                alert('ログイン成功！メニューページに移動します。');
+                location.href = '../menu/index.html';
+            } else {
+                alert('ユーザー名とパスワードを入力してください。');
+            }
+        });
+    </script>
+</body>
+</html>

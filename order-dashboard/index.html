@@ -1,0 +1,262 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - 注文管理</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-content">
+    <main class="main-content">
+        <div class="dashboard-section">
+            <h2>注文管理ダッシュボード</h2>
+            
+            <div class="dashboard-stats">
+                <div class="stat-card">
+                    <h3>今日の注文数</h3>
+                    <p class="stat-number" id="todayOrders">0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>今日の売上</h3>
+                    <p class="stat-number" id="todaySales">¥0</p>
+                </div>
+                <div class="stat-card">
+                    <h3>処理待ち</h3>
+                    <p class="stat-number" id="pendingOrders">0</p>
+                </div>
+            </div>
+            
+            <div class="order-management">
+                <h3>最近の注文</h3>
+                <div class="order-filters">
+                    <button class="filter-btn active" data-status="all">すべて</button>
+                    <button class="filter-btn" data-status="pending">処理待ち</button>
+                    <button class="filter-btn" data-status="preparing">準備中</button>
+                    <button class="filter-btn" data-status="ready">受取可能</button>
+                    <button class="filter-btn" data-status="completed">完了</button>
+                </div>
+                
+                <div class="orders-list" id="ordersList">
+                    <!-- 注文リストが動的に挿入される -->
+                </div>
+            </div>
+            
+            <div class="dashboard-actions">
+                <button class="action-btn" onclick="generateReport()">売上レポート生成</button>
+                <button class="action-btn" onclick="exportOrders()">注文データエクスポート</button>
+                <button class="action-btn" onclick="location.href='../menu/index.html'">新規注文</button>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../header.js"></script>
+    <script>
+        // サンプル注文データ
+        let orders = [
+            {
+                id: 'ORD-001',
+                customerName: '山田太郎',
+                items: [
+                    { name: 'おにぎり（鮭）', price: 120, quantity: 2 },
+                    { name: 'お茶', price: 100, quantity: 1 }
+                ],
+                total: 340,
+                status: 'pending',
+                orderTime: new Date('2024-11-05T10:30:00'),
+                estimatedReady: new Date('2024-11-05T11:00:00')
+            },
+            {
+                id: 'ORD-002',
+                customerName: '佐藤花子',
+                items: [
+                    { name: 'サンドイッチ', price: 200, quantity: 1 },
+                    { name: 'コーヒー', price: 120, quantity: 1 }
+                ],
+                total: 320,
+                status: 'preparing',
+                orderTime: new Date('2024-11-05T10:15:00'),
+                estimatedReady: new Date('2024-11-05T10:45:00')
+            },
+            {
+                id: 'ORD-003',
+                customerName: '田中一郎',
+                items: [
+                    { name: 'チョコレート', price: 80, quantity: 3 },
+                    { name: 'ジュース', price: 150, quantity: 1 }
+                ],
+                total: 390,
+                status: 'ready',
+                orderTime: new Date('2024-11-05T09:45:00'),
+                estimatedReady: new Date('2024-11-05T10:15:00')
+            }
+        ];
+        
+        const statusLabels = {
+            'pending': '処理待ち',
+            'preparing': '準備中',
+            'ready': '受取可能',
+            'completed': '完了'
+        };
+        
+        const statusColors = {
+            'pending': '#e74c3c',
+            'preparing': '#f39c12',
+            'ready': '#27ae60',
+            'completed': '#95a5a6'
+        };
+        
+        function updateOrderStatus(orderId, newStatus) {
+            const order = orders.find(o => o.id === orderId);
+            if (order) {
+                order.status = newStatus;
+                if (newStatus === 'completed') {
+                    order.completedTime = new Date();
+                }
+                renderOrders();
+                updateStats();
+            }
+        }
+        
+        function renderOrders(filterStatus = 'all') {
+            const filteredOrders = filterStatus === 'all' 
+                ? orders 
+                : orders.filter(order => order.status === filterStatus);
+            
+            const ordersContainer = document.getElementById('ordersList');
+            
+            if (filteredOrders.length === 0) {
+                ordersContainer.innerHTML = '<p class="no-orders">該当する注文がありません</p>';
+                return;
+            }
+            
+            ordersContainer.innerHTML = filteredOrders.map(order => `
+                <div class="order-card" data-status="${order.status}">
+                    <div class="order-header">
+                        <div class="order-id">${order.id}</div>
+                        <div class="order-status" style="background-color: ${statusColors[order.status]}">
+                            ${statusLabels[order.status]}
+                        </div>
+                    </div>
+                    
+                    <div class="order-info">
+                        <div class="customer-info">
+                            <strong>${order.customerName}</strong>
+                        </div>
+                        <div class="order-time">
+                            注文時刻: ${order.orderTime.toLocaleTimeString()}
+                        </div>
+                        <div class="estimated-ready">
+                            完成予定: ${order.estimatedReady.toLocaleTimeString()}
+                        </div>
+                    </div>
+                    
+                    <div class="order-items">
+                        ${order.items.map(item => `
+                            <div class="order-item">
+                                ${item.name} × ${item.quantity} - ¥${item.price * item.quantity}
+                            </div>
+                        `).join('')}
+                    </div>
+                    
+                    <div class="order-footer">
+                        <div class="order-total">合計: ¥${order.total}</div>
+                        <div class="order-actions">
+                            ${order.status === 'pending' ? `
+                                <button class="status-btn" onclick="updateOrderStatus('${order.id}', 'preparing')">
+                                    準備開始
+                                </button>
+                            ` : ''}
+                            ${order.status === 'preparing' ? `
+                                <button class="status-btn" onclick="updateOrderStatus('${order.id}', 'ready')">
+                                    完成
+                                </button>
+                            ` : ''}
+                            ${order.status === 'ready' ? `
+                                <button class="status-btn" onclick="updateOrderStatus('${order.id}', 'completed')">
+                                    受け渡し完了
+                                </button>
+                            ` : ''}
+                        </div>
+                    </div>
+                </div>
+            `).join('');
+        }
+        
+        function updateStats() {
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => 
+                order.orderTime.toDateString() === today
+            );
+            
+            const todaySales = todayOrders.reduce((sum, order) => sum + order.total, 0);
+            const pendingCount = orders.filter(order => order.status === 'pending').length;
+            
+            document.getElementById('todayOrders').textContent = todayOrders.length;
+            document.getElementById('todaySales').textContent = `¥${todaySales}`;
+            document.getElementById('pendingOrders').textContent = pendingCount;
+        }
+        
+        function generateReport() {
+            const today = new Date().toDateString();
+            const todayOrders = orders.filter(order => 
+                order.orderTime.toDateString() === today
+            );
+            
+            const report = {
+                date: today,
+                totalOrders: todayOrders.length,
+                totalSales: todayOrders.reduce((sum, order) => sum + order.total, 0),
+                ordersByStatus: {
+                    pending: orders.filter(o => o.status === 'pending').length,
+                    preparing: orders.filter(o => o.status === 'preparing').length,
+                    ready: orders.filter(o => o.status === 'ready').length,
+                    completed: orders.filter(o => o.status === 'completed').length
+                }
+            };
+            
+            alert(`売上レポート\n日付: ${report.date}\n注文数: ${report.totalOrders}件\n売上: ¥${report.totalSales}`);
+            console.log('詳細レポート:', report);
+        }
+        
+        function exportOrders() {
+            const csvData = [
+                ['注文ID', '顧客名', '商品', '合計金額', 'ステータス', '注文時刻'],
+                ...orders.map(order => [
+                    order.id,
+                    order.customerName,
+                    order.items.map(item => `${item.name}×${item.quantity}`).join('; '),
+                    order.total,
+                    statusLabels[order.status],
+                    order.orderTime.toLocaleString()
+                ])
+            ].map(row => row.join(',')).join('\n');
+            
+            const blob = new Blob([csvData], { type: 'text/csv;charset=utf-8;' });
+            const link = document.createElement('a');
+            link.href = URL.createObjectURL(blob);
+            link.download = `orders_${new Date().toISOString().split('T')[0]}.csv`;
+            link.click();
+        }
+        
+        // フィルターボタンのイベントリスナー
+        document.querySelectorAll('.filter-btn').forEach(btn => {
+            btn.addEventListener('click', function() {
+                document.querySelectorAll('.filter-btn').forEach(b => b.classList.remove('active'));
+                this.classList.add('active');
+                
+                const status = this.dataset.status;
+                renderOrders(status);
+            });
+        });
+        
+        // 初期表示
+        renderOrders();
+        updateStats();
+        
+        // 定期的にデータを更新（実際にはWebSocketやServer-Sent Eventsを使用）
+        setInterval(() => {
+            updateStats();
+        }, 30000); // 30秒ごとに更新
+    </script>
+</body>
+</html>

@@ -1,0 +1,142 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - 商品詳細</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-content">
+    <main class="main-content">
+        <div class="detail-section">
+            <div id="productDetail">
+                <!-- 商品詳細が動的に挿入される -->
+            </div>
+        </div>
+    </main>
+    
+    <script src="../header.js"></script>
+    <script>
+        // サンプル商品データ（実際にはAPIから取得）
+        const products = {
+            1: { id: 1, name: 'おにぎり（鮭）', price: 120, category: 'food', image: '🍙', 
+                 description: '新鮮な鮭を使用したおにぎりです。北海道産のお米を使用し、ふっくらと炊き上げました。', 
+                 ingredients: 'お米、鮭、海苔、塩', 
+                 allergens: '特になし',
+                 nutrition: { calories: 180, protein: 8, fat: 2, carb: 35 }
+               },
+            2: { id: 2, name: 'おにぎり（梅）', price: 110, category: 'food', image: '🍙', 
+                 description: '紀州産の梅干しを使用したさっぱりとした味わいのおにぎりです。', 
+                 ingredients: 'お米、梅干し、海苔、塩', 
+                 allergens: '特になし',
+                 nutrition: { calories: 160, protein: 6, fat: 1, carb: 34 }
+               },
+            3: { id: 3, name: 'サンドイッチ', price: 200, category: 'food', image: '🥪', 
+                 description: 'ハムとチーズ、レタスをサンドした定番のサンドイッチです。', 
+                 ingredients: 'パン、ハム、チーズ、レタス、マヨネーズ', 
+                 allergens: '小麦、卵、乳',
+                 nutrition: { calories: 280, protein: 15, fat: 12, carb: 28 }
+               },
+            // 他の商品も同様に定義...
+        };
+        
+        // URLパラメータから商品IDを取得
+        function getProductId() {
+            const urlParams = new URLSearchParams(window.location.search);
+            return parseInt(urlParams.get('id')) || 1;
+        }
+        
+        // カートに追加
+        function addToCart(productId) {
+            let cart = JSON.parse(localStorage.getItem('cart')) || [];
+            const product = products[productId];
+            const existingItem = cart.find(item => item.id === productId);
+            
+            if (existingItem) {
+                existingItem.quantity += 1;
+            } else {
+                cart.push({ ...product, quantity: 1 });
+            }
+            
+            localStorage.setItem('cart', JSON.stringify(cart));
+            alert(`${product.name} をカートに追加しました！`);
+        }
+        
+        // 商品詳細を表示
+        function renderProductDetail() {
+            const productId = getProductId();
+            const product = products[productId];
+            
+            if (!product) {
+                document.getElementById('productDetail').innerHTML = `
+                    <div class="error-message">
+                        <h2>商品が見つかりません</h2>
+                        <p>指定された商品は存在しないか、削除されました。</p>
+                        <button onclick="location.href='../menu/index.html'" class="back-to-menu-btn">メニューに戻る</button>
+                    </div>
+                `;
+                return;
+            }
+            
+            document.getElementById('productDetail').innerHTML = `
+                <div class="product-detail">
+                    <div class="product-header">
+                        <div class="product-image-large">${product.image}</div>
+                        <div class="product-info">
+                            <h1 class="product-name">${product.name}</h1>
+                            <p class="product-price">¥${product.price}</p>
+                            <p class="product-description">${product.description}</p>
+                            
+                            <div class="product-actions">
+                                <button class="add-to-cart-btn-large" onclick="addToCart(${product.id})">
+                                    カートに追加
+                                </button>
+                                <button class="back-to-menu-btn" onclick="location.href='../menu/index.html'">
+                                    メニューに戻る
+                                </button>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="product-details">
+                        <div class="detail-section">
+                            <h3>原材料</h3>
+                            <p>${product.ingredients}</p>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>アレルゲン</h3>
+                            <p>${product.allergens}</p>
+                        </div>
+                        
+                        <div class="detail-section">
+                            <h3>栄養成分（100gあたり）</h3>
+                            <div class="nutrition-info">
+                                <div class="nutrition-item">
+                                    <span class="nutrition-label">カロリー:</span>
+                                    <span class="nutrition-value">${product.nutrition.calories}kcal</span>
+                                </div>
+                                <div class="nutrition-item">
+                                    <span class="nutrition-label">タンパク質:</span>
+                                    <span class="nutrition-value">${product.nutrition.protein}g</span>
+                                </div>
+                                <div class="nutrition-item">
+                                    <span class="nutrition-label">脂質:</span>
+                                    <span class="nutrition-value">${product.nutrition.fat}g</span>
+                                </div>
+                                <div class="nutrition-item">
+                                    <span class="nutrition-label">炭水化物:</span>
+                                    <span class="nutrition-value">${product.nutrition.carb}g</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            `;
+        }
+        
+        // 初期表示
+        renderProductDetail();
+    </script>
+</body>
+</html>

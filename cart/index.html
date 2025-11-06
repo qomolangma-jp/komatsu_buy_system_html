@@ -1,0 +1,143 @@
+<!DOCTYPE html>
+<html lang="ja">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>小松購買システム - カート</title>
+    <link rel="stylesheet" href="../style.css">
+</head>
+<body class="page-content">
+    <main class="main-content">
+        <div class="cart-section">
+            <h2>ショッピングカート</h2>
+            <div id="cartItems" class="cart-items">
+                <!-- カートアイテムが動的に挿入される -->
+            </div>
+            
+            <div class="cart-summary" id="cartSummary">
+                <div class="summary-row">
+                    <span class="summary-label">商品点数:</span>
+                    <span class="summary-value" id="totalItems">0点</span>
+                </div>
+                <div class="summary-row total">
+                    <span class="summary-label">合計金額:</span>
+                    <span class="summary-value" id="totalPrice">¥0</span>
+                </div>
+            </div>
+            
+            <div class="cart-actions">
+                <button class="continue-shopping-btn" onclick="location.href='../menu/index.html'">買い物を続ける</button>
+                <button class="checkout-btn" onclick="checkout()" id="checkoutBtn" disabled>注文確定</button>
+                <button class="clear-cart-btn" onclick="clearCart()">カートを空にする</button>
+            </div>
+        </div>
+    </main>
+    
+    <script src="../header.js"></script>
+    <script>
+        let cart = JSON.parse(localStorage.getItem('cart')) || [];
+        
+        function updateQuantity(itemId, change) {
+            const item = cart.find(cartItem => cartItem.id === itemId);
+            if (item) {
+                item.quantity += change;
+                if (item.quantity <= 0) {
+                    removeFromCart(itemId);
+                } else {
+                    localStorage.setItem('cart', JSON.stringify(cart));
+                    renderCart();
+                }
+            }
+        }
+        
+        function removeFromCart(itemId) {
+            cart = cart.filter(item => item.id !== itemId);
+            localStorage.setItem('cart', JSON.stringify(cart));
+            renderCart();
+        }
+        
+        function clearCart() {
+            if (confirm('カート内の商品をすべて削除しますか？')) {
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                renderCart();
+            }
+        }
+        
+        function checkout() {
+            if (cart.length === 0) {
+                alert('カートが空です。');
+                return;
+            }
+            
+            const total = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            const itemCount = cart.reduce((sum, item) => sum + item.quantity, 0);
+            
+            if (confirm(`${itemCount}点、合計¥${total}で注文を確定しますか？`)) {
+                // 注文処理（実際にはサーバーに送信）
+                console.log('注文データ:', cart);
+                
+                alert('注文が確定されました！注文管理ページに移動します。');
+                
+                // カートをクリア
+                cart = [];
+                localStorage.setItem('cart', JSON.stringify(cart));
+                
+                // 注文管理ページに移動
+                location.href = '../order-dashboard/index.html';
+            }
+        }
+        
+        function renderCart() {
+            const cartItemsContainer = document.getElementById('cartItems');
+            const totalItemsElement = document.getElementById('totalItems');
+            const totalPriceElement = document.getElementById('totalPrice');
+            const checkoutBtn = document.getElementById('checkoutBtn');
+            
+            if (cart.length === 0) {
+                cartItemsContainer.innerHTML = `
+                    <div class="empty-cart">
+                        <p>カートは空です</p>
+                        <button onclick="location.href='../menu/index.html'" class="go-to-menu-btn">メニューを見る</button>
+                    </div>
+                `;
+                totalItemsElement.textContent = '0点';
+                totalPriceElement.textContent = '¥0';
+                checkoutBtn.disabled = true;
+                return;
+            }
+            
+            cartItemsContainer.innerHTML = cart.map(item => `
+                <div class="cart-item">
+                    <div class="item-info">
+                        <span class="item-image">${item.image}</span>
+                        <div class="item-details">
+                            <h3 class="item-name">${item.name}</h3>
+                            <p class="item-price">¥${item.price}</p>
+                        </div>
+                    </div>
+                    <div class="quantity-controls">
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, -1)">-</button>
+                        <span class="quantity">${item.quantity}</span>
+                        <button class="quantity-btn" onclick="updateQuantity(${item.id}, 1)">+</button>
+                    </div>
+                    <div class="item-total">
+                        ¥${item.price * item.quantity}
+                    </div>
+                    <button class="remove-btn" onclick="removeFromCart(${item.id})">削除</button>
+                </div>
+            `).join('');
+            
+            const totalItems = cart.reduce((sum, item) => sum + item.quantity, 0);
+            const totalPrice = cart.reduce((sum, item) => sum + (item.price * item.quantity), 0);
+            
+            totalItemsElement.textContent = `${totalItems}点`;
+            totalPriceElement.textContent = `¥${totalPrice}`;
+            checkoutBtn.disabled = false;
+        }
+        
+        // 初期表示
+        renderCart();
+    </script>
+</body>
+</html>
